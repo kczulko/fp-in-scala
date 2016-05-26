@@ -3,6 +3,9 @@ package com.kczulko.chapter2
 import scala.annotation.tailrec
 
 object Exercise_2_1 {
+  /*
+   * @tailrec fibonacci function
+   */
   def fibonacci(n: Int) = {
     require(n >= 0, "This function does not accept negative values.")
 
