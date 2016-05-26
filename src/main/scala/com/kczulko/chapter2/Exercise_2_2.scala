@@ -13,10 +13,8 @@ object Exercise_2_2 {
     @tailrec
     def loop(index: Int): Boolean = isOutOfRange(index + 1) match {
       case true => true
-      case _ => ordered(as(index), as(index + 1)) match {
-        case false => false
-        case _ => loop(index + 1)
-      }
+      case _ => if (!ordered(as(index), as(index + 1))) false
+                else loop(index + 1)
     }
 
     loop(0)
