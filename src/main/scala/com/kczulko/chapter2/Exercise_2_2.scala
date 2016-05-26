@@ -10,17 +10,15 @@ object Exercise_2_2 {
   def isSorted[A](as: Array[A], ordered: (A,A) => Boolean): Boolean = {
     val isOutOfRange = (nextIndex: Int) => nextIndex >= as.length
 
-    if (List(0, 1) contains as.length) {
-      return true
-    }
-
     @tailrec
-    def loop(elem: Int, nextElem: Int): Boolean =
-    ordered(as(elem), as(nextElem)) match {
-      case false => false
-      case _ => if (isOutOfRange(nextElem + 1)) true else loop(nextElem, nextElem + 1)
+    def loop(index: Int): Boolean = isOutOfRange(index + 1) match {
+      case true => true
+      case _ => ordered(as(index), as(index + 1)) match {
+        case false => false
+        case _ => loop(index + 1)
+      }
     }
 
-    loop(0, 1)
+    loop(0)
   }
 }
