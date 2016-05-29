@@ -102,4 +102,17 @@ class MyListTests extends FlatSpec with Matchers {
   "zipWith" should "add elements of two lists when that fuction is applied as an arg" in {
     zipWith(MyList(1,2,3), MyList(4,5,6))(_ + _) shouldEqual MyList(5,7,9)
   }
+
+  "foldRight" should "return valid product of logical conjunction" in {
+    foldRight(MyList(true, false, true, true), true)(_ && _) shouldEqual false
+    foldRight(MyList(true, true, true, true), true)(_ && _) shouldEqual true
+  }
+
+  "hasSubsequence" should "return expected boolean results" in {
+    hasSubsequence(MyList(1,2,3,4,5,6,7), MyList(4,5)) shouldEqual true
+    hasSubsequence(MyList(1,2,3,4,5,6,7), MyList(5,4)) shouldEqual false
+    hasSubsequence(MyList(1,2,3,4,5,6,7), MyList(5)) shouldEqual true
+    hasSubsequence(MyList(1,2,3,4,5,6,7), MyList(1,2,3,4,5)) shouldEqual true
+    hasSubsequence(MyList(1,2,3,4,5,6,7), MyList(1,2,3,4,5,6,7)) shouldEqual true
+  }
 }
