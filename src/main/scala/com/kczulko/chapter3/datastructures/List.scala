@@ -123,15 +123,16 @@ object MyList {
   }
 
   def hasSubsequence[A](sup: MyList[A], sub: MyList[A]): Boolean = {
-    def loop(one: MyList[A], two: MyList[A], results:MyList[Boolean]): MyList[Boolean] = (one, two) match {
+    def loop(one: MyList[A], two: MyList[A], results: MyList[Boolean]): MyList[Boolean] = (one, two) match {
       case (_, Nil) => results
       case (Nil, _) => results
-      case (Cons(hOne,tOne),Cons(hTwo,tTwo)) if (hOne == hTwo)
-        => loop(tOne,tTwo,append(MyList(true),results))
-      case (Cons(hOne,tOne), _) => loop(tOne, sub, Nil)
+      case (Cons(hOne, tOne), Cons(hTwo, tTwo)) if (hOne == hTwo)
+        => loop(tOne, tTwo, append(MyList(true), results))
+      case (Cons(hOne, tOne), _) => loop(tOne, sub, Nil)
     }
 
-    val results: MyList[Boolean] = loop(sup, sub, Nil)
+    val results = loop(sup, sub, Nil)
+
     length(results) == length(sub) && foldLeft(results, true)(_ && _)
   }
 }
