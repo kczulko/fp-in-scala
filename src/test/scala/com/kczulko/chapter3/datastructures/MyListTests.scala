@@ -31,11 +31,11 @@ class MyListTests extends FlatSpec with Matchers {
     dropWhile(MyList(2,4,6,7)){x => x % 2 equals 0} shouldEqual MyList(7)
   }
 
-  "init" should "return a list without it last element" in {
+  "init" should "return a list without its last element" in {
     init(MyList(1,2,3,4)) shouldEqual MyList(1,2,3)
   }
 
-  "length" should "behave list normal lenght function" in {
+  "length" should "behave like built-in lenght function" in {
     MyList.length(MyList(1,2,3,4)) shouldEqual List(1,2,3,4).length
   }
 
@@ -47,7 +47,7 @@ class MyListTests extends FlatSpec with Matchers {
     lengthAsFoldLeft(MyList(1,2,3,4,8)) shouldEqual MyList.length(MyList(2,2,2,2,2))
   }
 
-  "reverse" should "work as expected" in {
+  "reverse" should "change order of elements in list" in {
     reverse(MyList(1,2,3)) shouldEqual MyList(3,2,1)
   }
 
@@ -63,7 +63,7 @@ class MyListTests extends FlatSpec with Matchers {
     append3(Nil, MyList(3,4)) shouldEqual MyList(3,4)
   }
 
-  it should "return results as append" in {
+  it should "return the same results as append" in {
     append3(MyList(1,2), MyList(3,4)) shouldEqual MyList.append(MyList(1,2), MyList(3,4))
   }
 
@@ -71,7 +71,7 @@ class MyListTests extends FlatSpec with Matchers {
     append3(MyList(1,2), Nil) shouldEqual MyList(1,2)
   }
 
-  "concat" should "return expected results" in {
+  "concat" should "return joined lists" in {
     concat(MyList(MyList(1,2), MyList(3,4))) shouldEqual MyList(1,2,3,4)
   }
 
