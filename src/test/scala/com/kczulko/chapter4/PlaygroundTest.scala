@@ -20,4 +20,9 @@ class PlaygroundTest extends FlatSpec with Matchers {
   it should "return None when any of elements is None" in {
     sequence(List(Some(1), Some(2), None)) shouldEqual None
   }
+
+  it should "return None when list is Nil or empty" in {
+    sequence(Nil) shouldEqual None
+    sequence(List()) shouldEqual None
+  }
 }
