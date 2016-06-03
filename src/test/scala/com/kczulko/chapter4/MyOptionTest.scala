@@ -4,8 +4,6 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class MyOptionTest extends FlatSpec with Matchers {
 
-
-
   "filter" should "apply to Some class" in {
     MySome(13).filter(_ equals  13) shouldEqual MySome(13)
   }
