@@ -1,9 +1,9 @@
 package com.kczulko.chapter4
 
-import com.kczulko.chapter4.Playground.{sequence, variance}
+import com.kczulko.chapter4.OptionPlayground.{sequence, variance}
 import org.scalatest.{FlatSpec, Matchers}
 
-class PlaygroundTest extends FlatSpec with Matchers {
+class OptionPlaygroundTest extends FlatSpec with Matchers {
 
   "variance" should "return 0.25 for sequence of 1 and 2" in {
     variance(Seq(1,2)) shouldEqual Some(0.25)
@@ -19,6 +19,7 @@ class PlaygroundTest extends FlatSpec with Matchers {
 
   it should "return None when any of elements is None" in {
     sequence(List(Some(1), Some(2), None)) shouldEqual None
+    sequence(List(Some(1), None, Some(2), Some(3))) shouldEqual None
   }
 
   it should "return None when list is Nil or empty" in {
