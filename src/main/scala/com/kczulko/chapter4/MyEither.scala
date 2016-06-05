@@ -52,9 +52,11 @@ object MyEither {
   def traverse[E,A,B](as: List[A])(f: A => MyEither[E,B]): MyEither[E, List[B]] =
     as.foldLeft {
       as match {
+        // how (and WHAT!) to return when as match Nil?
         case _ => (MyRight(List(): List[B]): MyEither[E, List[B]])
+
       }
     } {
-      (x, y) => x.flatMap(vx => f(y).map(vx ++ List(_)))
+      (x,y) => x.flatMap(vx => f(y).map(vx ++ List(_)))
     }
 }
