@@ -21,4 +21,10 @@ class MyStreamTest extends FlatSpec with Matchers {
     (MyStream(1,2,3,4) drop 5).toList shouldEqual MyStream().toList
   }
 
+  "takeWhile" should "elements from the Stream that are passing given predicate" in {
+    (MyStream(1,2,3,4) takeWhile { _ < 3 }).toList shouldEqual MyStream(1,2).toList
+    (MyStream(1,2) drop 4 takeWhile {_ < 2 }).toList shouldEqual MyStream().toList
+    (MyStream() takeWhile {_ => true}).toList shouldEqual MyStream().toList
+  }
+
 }
