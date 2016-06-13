@@ -33,6 +33,8 @@ trait MyStream[+A] {
   def append[B >: A](s: => MyStream[B]): MyStream[B] = s.foldRight(this: MyStream[B])((a, b) => cons(a,b))
 
   def flatMap[B](f: A => MyStream[B]): MyStream[B] = foldRight(Empty: MyStream[B])((a, b) => b append f(a))
+
+
 }
 case object Empty extends MyStream[Nothing] {
   override def toList: List[Nothing] = Nil
@@ -63,8 +65,17 @@ object MyStream {
     Cons(() => head, () => tail)
   }
 
+  def constant[A](a: A): MyStream[A] = cons(a, constant(a))
+
   def empty[A]: MyStream[A] = Empty
 
   def apply[A](as: A*): MyStream[A] =
     if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
+
+  def from(n: Int): MyStream[Int] = cons(n, from(n+1))
+
+  def fib: MyStream[Int] = {
+    def loop(a: Int, b: Int): MyStream[Int] = cons(a, loop(b, a + b))
+    loop(0, 1)
+  }
 }

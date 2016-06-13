@@ -53,4 +53,16 @@ class MyStreamTest extends FlatSpec with Matchers {
   "flatMap" should "return a flatten stream" in {
     { MyStream(MyStream(1,2), MyStream(3,4)) flatMap(x => x) toList } shouldEqual List(1,2,3,4)
   }
+
+  "constant" should "return stream of constant numbers" in {
+    { MyStream.constant(6) take 5 toList } shouldEqual List(6,6,6,6,6)
+  }
+
+  "from" should "create an infinite stream with given start number" in {
+    { MyStream.from(4) take 3 toList } shouldEqual List(4,5,6)
+  }
+
+  "fib" should "return stream of fibbonacci numbers" in {
+    { MyStream.fib take 6 toList } shouldEqual List(0,1,1,2,3,5)
+  }
 }
