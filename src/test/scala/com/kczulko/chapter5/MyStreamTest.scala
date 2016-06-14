@@ -1,5 +1,6 @@
 package com.kczulko.chapter5
 
+import com.kczulko.chapter5.MyStream.constant
 import org.scalatest.{FlatSpec, Matchers}
 
 class MyStreamTest extends FlatSpec with Matchers {
@@ -55,7 +56,7 @@ class MyStreamTest extends FlatSpec with Matchers {
   }
 
   "constant" should "return stream of constant numbers" in {
-    { MyStream.constant(6) take 5 toList } shouldEqual List(6,6,6,6,6)
+    { constant(6) take 5 toList } shouldEqual List(6,6,6,6,6)
   }
 
   "from" should "create an infinite stream with given start number" in {
@@ -64,5 +65,37 @@ class MyStreamTest extends FlatSpec with Matchers {
 
   "fib" should "return stream of fibbonacci numbers" in {
     { MyStream.fib take 6 toList } shouldEqual List(0,1,1,2,3,5)
+  }
+
+  "zipWith" should "concat two streams accordingly to given function" in {
+    MyStream(1,2,3,4,5).zipWith(MyStream(5,4,3,2,1))((x,y) => s"$x$y" toInt).toList shouldEqual List(15,24,33,42,51)
+  }
+
+  "zipAll" should "return stream of Options" in {
+    { MyStream(1,2,3) zipAll(MyStream(4,5)) toList } shouldEqual List(
+      (Some(1), Some(4)),
+      (Some(2), Some(5)),
+      (Some(3), None)
+    )
+  }
+
+  "startsWith" should "return true when Stream starts with another one" in {
+    MyStream(1,2,3,4) startsWith MyStream(1,2) should be {true}
+  }
+
+  it should "return false when Stream does not start with another one" in {
+    MyStream(1,2,3,4) startsWith MyStream(2, 3) should not be {true}
+  }
+
+  it should "return false when Empty stream passed as an argument" in {
+    MyStream(1,2,3) startsWith Empty shouldEqual false
+  }
+
+  it should "return false when called on empty Stream" in {
+    MyStream() startsWith MyStream(1,2) shouldEqual false
+  }
+
+  "tails" should "return the stream of suffixes when called on a stream" in {
+    { MyStream(1,2,3) tails }.map(_.toList).toList shouldEqual List(List(1,2,3), List(2,3), List(3))
   }
 }
