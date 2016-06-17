@@ -96,6 +96,14 @@ class MyStreamTest extends FlatSpec with Matchers {
   }
 
   "tails" should "return the stream of suffixes when called on a stream" in {
-    { MyStream(1,2,3) tails }.map(_.toList).toList shouldEqual List(List(1,2,3), List(2,3), List(3))
+    { MyStream(1,2,3) tails }.map(_.toList).toList shouldEqual List(List(1,2,3), List(2,3), List(3), List())
+  }
+
+  "scanRight" should "return sums of each product that comes from 'tails'" in {
+    { MyStream(1,2,3).scanRight(0)(_+_) toList } shouldEqual List(6,5,3,0)
+  }
+
+  "tails2" should "" in {
+    { MyStream(1,2,3) tails2 }.map(_.toList).toList shouldEqual List(List(1,2,3), List(2,3), List(3), List())
   }
 }

@@ -55,10 +55,24 @@ trait MyStream[+A] {
       case _ => false
     }
 
-  def tails: MyStream[MyStream[A]] = unfold(this){
-    case Cons(h, t) => Some(Cons(h, t), t())
+  def tails: MyStream[MyStream[A]] = MyStream(MyStream()) append unfold(this) {
+    case Cons(h, t) => Some(Cons(h,t), t())
     case _ => None
   }
+
+  def tails2: MyStream[MyStream[A]] = this.foldRight(MyStream(MyStream()): MyStream[MyStream[A]])((a, b) =>
+    {
+      val appendable = b.take(1) append MyStream(MyStream(a))
+      b append MyStream(appendable.flatMap(x => x))
+    }
+  )
+
+  def scanRight[B](b: B)(f: (A, => B) => B): MyStream[B] =
+    MyStream(b) append foldRight(b, MyStream(): MyStream[B])((a,b) => {
+      val newFirst = f(a, b._1)
+      val newSecond = cons(newFirst, b._2)
+      (newFirst, newSecond)
+    })._2
 
   def hasSubsequence[B >: A](other: MyStream[B]) = tails exists(_ startsWith other)
 
@@ -71,8 +85,6 @@ trait MyStream[+A] {
     case Cons(h, t) => f(h(), t().foldRight(z)(f))
     case _ => z
   }
-
-//  def scanRight()
 
   def exists2(p: A => Boolean): Boolean = foldRight(false)((a,b) => p(a) || b)
 
