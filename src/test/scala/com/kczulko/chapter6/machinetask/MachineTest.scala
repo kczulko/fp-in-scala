@@ -5,7 +5,6 @@ import org.scalatest.{Matchers, FlatSpec}
 
 class MachineTest extends FlatSpec with Matchers {
 
-
   "simulateMachine" should "proceed to unlock if there is a coin inserted into locked machine" in {
     val machine = simulateMachine(List(Coin())).run(Machine(true, 5, 5))._2
 
