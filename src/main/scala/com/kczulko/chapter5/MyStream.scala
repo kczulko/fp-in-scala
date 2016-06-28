@@ -62,8 +62,8 @@ trait MyStream[+A] {
 
   def tails2: MyStream[MyStream[A]] = this.foldRight(MyStream(MyStream()): MyStream[MyStream[A]])((a, b) =>
     {
-      val appendable = b.take(1) append MyStream(MyStream(a))
-      b append MyStream(appendable.flatMap(x => x))
+      val newElem = (b take(1) append MyStream(MyStream(a))).flatMap(x => x)
+      b append MyStream(newElem)
     }
   )
 
