@@ -1,4 +1,4 @@
-package com.kczulko.chapter6
+package com.kczulko.chapter7.myimpl
 
 import java.util.concurrent.{Callable, ExecutorService, Future, TimeUnit}
 
