@@ -14,7 +14,7 @@ trait MyStream[+A] {
     }
   )
 
-  def zipWith[B >: A, C](other: MyStream[B])(f: (B, B) => C): MyStream[C] =
+  def zipWith[B, C](other: MyStream[B])(f: (A, B) => C): MyStream[C] =
     unfold((this, other))(_ match {
       case (_, Empty) => None
       case (Empty, _) => None
