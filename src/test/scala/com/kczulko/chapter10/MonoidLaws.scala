@@ -3,7 +3,7 @@ package com.kczulko.chapter10
 import org.scalatest.{FlatSpec, Matchers}
 
 trait MonoidLaws { this: FlatSpec with Matchers =>
-  def monoidOf[A](monoid: Monoid[A], values: (A, A, A)) {
+  def monoidOf[A](monoid: Monoid[A])(values: (A, A, A)) {
     it should "satisfy associativity law for op" in {
       val a1 = values._1
       val a2 = values._2
