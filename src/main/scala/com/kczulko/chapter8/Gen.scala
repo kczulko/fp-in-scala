@@ -1,8 +1,8 @@
 package com.kczulko.chapter8
 
 import com.kczulko.chapter5.MyStream
-import com.kczulko.chapter6.{SimpleRNG, State, RNG}
-import com.kczulko.chapter8.Prop.{TestCases, FailedCase, SuccessCount}
+import com.kczulko.chapter6.{RNG, SimpleRNG, State}
+import com.kczulko.chapter8.Prop.{FailedCase, MaxSize, SuccessCount, TestCases}
 
 sealed trait Result {
   def isFalsified = false
@@ -16,22 +16,50 @@ case class Falsified(failure: FailedCase, successes: SuccessCount) extends Resul
   override def isFalsified = true
 }
 
-/*trait Prop {
-  def &&(p: Prop): Prop = ???
-  def check: Either[(FailedCase, SuccessCount), SuccessCount] = ???
-}*/
-
 case class Prop(run: (TestCases,RNG) => Result)
 
 object Prop {
+  type MaxSize = Int
   type TestCases = Int
   type SuccessCount = Int
   type FailedCase = String
 }
 
 case class Gen[+A](sample: State[RNG, A]) {
+  def map[B](f: A => B): Gen[B] = Gen(sample.map(f))
   def flatMap[B](f: A => Gen[B]): Gen[B] = Gen(sample.flatMap(a => f(a).sample))
   def listOfN_1(size: Int): Gen[List[A]] = flatMap(a => Gen(State(s => (List.fill(size)(a), s))))
+  def unsized: SGen[A] = SGen(_ => this)
+}
+
+case class SGen[+A](forSize: Int => Gen[A]) {
+
+  case class Prop(run: (MaxSize, TestCases, RNG) => Result) {
+    def &&(other: Prop): Prop = Prop((ms,tc,rng) => run(ms,tc,rng) match {
+      case Passed => other.run(ms,tc,rng)
+      case any => any
+    })
+  }
+
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop = forAll(_ => g)(f)
+
+  def forAll[A](g: Int => SGen[A])(f: A => Boolean): Prop = Prop {
+    (max,n,rng) =>
+      val casesPerSize = (n + (max - 1)) / max
+      val props : Stream[Prop] = Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))
+      val prop: Prop = props.map(p => Prop { (max, _, rng) =>
+        p.run(max, casesPerSize, rng)
+      }).toList.reduce(_ && _)
+    prop.run(max, n, rng)
+  }
+
+
+  def apply(n: Int): Gen[A] = forSize(n)
+  def map[B](f: A => B): SGen[B] = SGen(i => forSize(i).map(f))
+  def flatMap[B](f: A => SGen[B]): SGen[B] =
+    SGen(i => forSize(i).flatMap(a => f(a).forSize(i)))
+  def listOf[A](g: Gen[A]): SGen[List[A]] = SGen(g.listOfN_1(_))
+
 }
 
 object Gen {

@@ -55,6 +55,7 @@ object Nonblocking {
     def eval(es: ExecutorService)(r: => Unit): Unit =
       es.submit(new Callable[Unit] { def call = r })
 
+    /*
     def map2[A,B,C](p: Par[A], p2: Par[B])(f: (A,B) => C): Par[C] =
       es => new Future[C] {
         def apply(cb: C => Unit): Unit = {
@@ -74,7 +75,7 @@ object Nonblocking {
           p(es)(a => combiner ! Left(a))
           p2(es)(b => combiner ! Right(b))
         }
-      }
+      }*/
 
     // specialized version of `map`
     def map[A,B](p: Par[A])(f: A => B): Par[B] =
@@ -89,29 +90,31 @@ object Nonblocking {
     def asyncF[A,B](f: A => B): A => Par[B] =
       a => lazyUnit(f(a))
 
+    /*
     def sequenceRight[A](as: List[Par[A]]): Par[List[A]] =
       as match {
         case Nil => unit(Nil)
         case h :: t => map2(h, fork(sequence(t)))(_ :: _)
-      }
+      }*/
 
-    def sequenceBalanced[A](as: IndexedSeq[Par[A]]): Par[IndexedSeq[A]] = fork {
+
+    /*def sequenceBalanced[A](as: IndexedSeq[Par[A]]): Par[IndexedSeq[A]] = fork {
       if (as.isEmpty) unit(Vector())
       else if (as.length == 1) map(as.head)(a => Vector(a))
       else {
         val (l,r) = as.splitAt(as.length/2)
         map2(sequenceBalanced(l), sequenceBalanced(r))(_ ++ _)
       }
-    }
+    }*/
 
-    def sequence[A](as: List[Par[A]]): Par[List[A]] =
-      map(sequenceBalanced(as.toIndexedSeq))(_.toList)
+    /*def sequence[A](as: List[Par[A]]): Par[List[A]] =
+      map(sequenceBalanced(as.toIndexedSeq))(_.toList)*/
 
-    def parMap[A,B](as: List[A])(f: A => B): Par[List[B]] =
-      sequence(as.map(asyncF(f)))
+    /*def parMap[A,B](as: List[A])(f: A => B): Par[List[B]] =
+      sequence(as.map(asyncF(f)))*/
 
-    def parMap[A,B](as: IndexedSeq[A])(f: A => B): Par[IndexedSeq[B]] =
-      sequenceBalanced(as.map(asyncF(f)))
+    /*def parMap[A,B](as: IndexedSeq[A])(f: A => B): Par[IndexedSeq[B]] =
+      sequenceBalanced(as.map(asyncF(f)))*/
 
     // exercise answers
 
@@ -183,14 +186,14 @@ object Nonblocking {
       join(map(p)(f))
 
     /* Gives us infix syntax for `Par`. */
-    implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
+    /*implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)*/
 
     // infix versions of `map`, `map2` and `flatMap`
-    class ParOps[A](p: Par[A]) {
+    /*class ParOps[A](p: Par[A]) {
       def map[B](f: A => B): Par[B] = Par.map(p)(f)
       def map2[B,C](b: Par[B])(f: (A,B) => C): Par[C] = Par.map2(p,b)(f)
       def flatMap[B](f: A => Par[B]): Par[B] = Par.flatMap(p)(f)
       def zip[B](b: Par[B]): Par[(A,B)] = p.map2(b)((_,_))
-    }
+    }*/
   }
 }
