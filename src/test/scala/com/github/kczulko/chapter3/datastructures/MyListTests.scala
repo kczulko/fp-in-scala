@@ -1,7 +1,7 @@
 package com.github.kczulko.chapter3.datastructures
 
 import com.github.kczulko.chapter3.datastructures.MyList._
-import org.scalatest.{FlatSpec, FunSuite, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
 class MyListTests extends FlatSpec with Matchers {
   "tail" should "return list structure without head" in {

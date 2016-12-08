@@ -1,6 +1,5 @@
 package com.github.kczulko.chapter3.datastructures
 
-
 sealed trait BinTree[+A]
 
 case class Leaf[A](value: A) extends BinTree[A]
