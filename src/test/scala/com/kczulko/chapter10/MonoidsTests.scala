@@ -32,8 +32,13 @@ class MonoidsTests extends FlatSpec with MonoidLaws with Matchers {
     countWords("this is sparta!") shouldEqual 3
   }
 
-  "productMonoid" should behave like
-    monoidOf(
-      productMonoid(optionMonoid: Monoid[Option[Boolean]], intAddition)
-    )((Some(true), 2), (Some(false), 0), (None, 3))
+  "productMonoid" should behave like monoidOf {
+    productMonoid(optionMonoid: Monoid[Option[Boolean]], intAddition)
+  }((Some(true), 2), (Some(false), 0), (None, 3))
+
+  "bag" should "produce map with a number of each occurence" in {
+    bag(Vector("a", "rose", "is", "a", "rose")) should contain theSameElementsAs {
+      Map("a" -> 2, "rose" -> 2, "is" -> 1)
+    }
+  }
 }
