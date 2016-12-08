@@ -9,7 +9,6 @@ class MonoidsTests extends FlatSpec with MonoidLaws with Matchers {
   "Boolean or" should behave like monoidOf(booleanOr)(true,false,true)
   "Boolean and" should behave like monoidOf(booleanAnd)(true,false,true)
   "Option monoid" should behave like monoidOf(optionMonoid: Monoid[Option[Boolean]])(Some(true), None, Some(true))
-//  "Endo monoid" should behave like monoidOf(endoMonoid: Monoid[Int => Int])(v=>v+2, t=>t-1, u=>u*2)
 
   "foldMap" should "return expected result when folding whole list" in {
     foldMap(List("1", "2", "3"), intAddition)(_.toInt) shouldEqual 6
@@ -18,15 +17,6 @@ class MonoidsTests extends FlatSpec with MonoidLaws with Matchers {
   "foldRight with foldMap impl" should "behave like 'normal' foldRight" in {
     foldRight(List("1", "2", "3"), "")(_ + _) shouldEqual "123"
   }
-//
-//  "isOrdered" should "work as expected" in {
-//    isOrdered(IndexedSeq(1,2,3,4)) shouldEqual true
-//    isOrdered(IndexedSeq(1,2,4,3)) shouldEqual false
-//    isOrdered(IndexedSeq(1,2)) shouldEqual true
-//    isOrdered(IndexedSeq(2,1)) shouldEqual false
-//    isOrdered(IndexedSeq(2)) shouldEqual true
-//    isOrdered(IndexedSeq()) shouldEqual true
-//  }
 
   "wc" should "properly count words" in {
     countWords("this is sparta!") shouldEqual 3
