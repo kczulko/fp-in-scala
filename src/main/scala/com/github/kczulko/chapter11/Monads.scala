@@ -18,6 +18,11 @@ object Monads {
     override def flatMap[A, B](ma: List[A])(f: (A) => List[B]): List[B] = ma flatMap f
   }
 
+  val idMonad = new Monad[Id] {
+    override def unit[A](a: => A): Id[A] = Id(a)
+    override def flatMap[A, B](ma: Id[A])(f: (A) => Id[B]): Id[B] = ma flatMap f
+  }
+
   class StateMonads[S] {
     type StateS[A] = State[S,A]
 
