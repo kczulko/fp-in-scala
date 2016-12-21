@@ -13,7 +13,7 @@ object Monads {
     override def flatMap[A, B](ma: Stream[A])(f: (A) => Stream[B]): Stream[B] = ma flatMap f
   }
 
-  def listMonad = new Monad[List] {
+  val listMonad = new Monad[List] {
     override def unit[A](a: => A): List[A] = List(a)
     override def flatMap[A, B](ma: List[A])(f: (A) => List[B]): List[B] = ma flatMap f
   }
