@@ -23,7 +23,7 @@ trait Applicative[F[_]] extends Functor[F] {
     map2(fab, fa)(_(_))
 
   def mapInTermsOfApply[A, B](fa: F[A])(f: A => B): F[B] =
-    apply(unit[A => B](f))(fa)
+    apply2(unit[A => B](f))(fa)
   def map2InTermsOfApply[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] = {
     val fbc = mapInTermsOfApply(fa)(f.curried)
     apply2(fbc)(fb)
