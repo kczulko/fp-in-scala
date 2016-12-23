@@ -1,6 +1,7 @@
 package com.github.kczulko.chapter11
 
-import com.github.kczulko.chapter11.Monads.{idMonad, optionMonad}
+import com.github.kczulko.chapter11.Monads.{eitherMonad, idMonad, optionMonad}
+import com.kczulko.chapter4.MyEither
 import org.scalatest.{FlatSpec, Matchers}
 
 class MonadsTest extends FlatSpec with Matchers with MonadLaws {
@@ -15,4 +16,6 @@ class MonadsTest extends FlatSpec with Matchers with MonadLaws {
   }{
     (_: Int) => Some("some")
   }
+
+  MyEither
 }

@@ -9,7 +9,7 @@ trait Monad[F[_]] extends Applicative[F] {
   override def apply[A, B](fab: F[(A) => B])(fa: F[A]): F[B] = apply2(fab)(fa)
 
   override def map[A,B](ma: F[A])(f: A => B): F[B] = flatMap(ma)(a => unit(f(a)))
-  def map2[A,B,C](ma: F[A], mb: F[B])(f: (A,B) => C): F[C] =
+  override def map2[A,B,C](ma: F[A], mb: F[B])(f: (A,B) => C): F[C] =
     flatMap(ma)(a => map(mb)(b => f(a,b)))
   def filterM[A](ms: List[A])(f: A => F[Boolean]): F[List[A]] = ms match {
     case Nil => unit(Nil)
