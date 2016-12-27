@@ -1,7 +1,5 @@
 package com.github.kczulko.chapter12
 
-import com.sun.xml.internal.ws.developer.MemberSubmissionAddressing.Validation
-
 object Applicatives {
   val optionApp = new Applicative[Option] {// primitive combinators
     override def apply[A, B](fab: Option[(A) => B])(fa: Option[A]): Option[B] =

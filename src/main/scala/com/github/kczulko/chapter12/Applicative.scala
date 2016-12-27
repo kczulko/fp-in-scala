@@ -17,6 +17,8 @@ trait Applicative[F[_]] extends Functor[F] {
   def sequence[A](fas: List[F[A]]): F[List[A]] = traverse(fas)(identity)
   def replicateM[A](n: Int, fa: F[A]): F[List[A]] = map(fa)(List.fill(n)(_))
   def product[A,B](fa: F[A], fb: F[B]): F[(A,B)] = map2(fa,fb)((_,_))
+  def assoc[A,B,C](p: (A,(B,C))): ((A,B),C) =
+    p match { case (a,(b,c)) => ((a,b),c) }
 
   // (apply,unit) == (map, map2)
   def apply2[A,B](fab: F[A => B])(fa: F[A]): F[B] =
@@ -40,4 +42,30 @@ trait Applicative[F[_]] extends Functor[F] {
     val fde = map2InTermsOfApply(fcde, fc)(_(_))
     apply2(fde)(fd)
   }
+
+  def product[G[_]](g: Applicative[G]): Applicative[({type f[x] = (F[x], G[x])})#f] =
+  new Applicative[({type f[x] = (F[x], G[x])})#f] {
+    override def map2[A, B, C](fa: (F[A], G[A]), fb: (F[B], G[B]))(f: (A, B) => C): (F[C], G[C]) = (
+      Applicative.this.map2(fa._1, fb._1)(f),
+      g.map2(fa._2, fb._2)(f)
+    )
+    override def apply[A, B](fab: (F[(A) => B], G[(A) => B]))(fa: (F[A], G[A])): (F[B], G[B]) =
+      apply2(fab)(fa)
+    override def unit[A](a: => A): (F[A], G[A]) = (Applicative.this.unit(a), g.unit(a))
+    override def map[A, B](fa: (F[A], G[A]))(f: (A) => B): (F[B], G[B]) = (
+      Applicative.this.map(fa._1)(f),
+      g.map(fa._2)(f)
+    )
+  }
+
+  def compose[G[_]](g: Applicative[G]): Applicative[({type f[x] = F[G[x]]})#f] =
+    new Applicative[({type f[x] = F[G[x]]})#f] {
+      override def map2[A, B, C](fa: F[G[A]], fb: F[G[B]])(f: (A, B) => C): F[G[C]] =
+        Applicative.this.map2(fa, fb)(g.map2(_,_)(f))
+      override def apply[A, B](fab: F[G[(A) => B]])(fa: F[G[A]]): F[G[B]] =
+        apply2(fab)(fa)
+      override def unit[A](a: => A): F[G[A]] = Applicative.this.unit(g.unit(a))
+      override def map[A, B](fa: F[G[A]])(f: (A) => B): F[G[B]] =
+        Applicative.this.map(fa)(g.map(_)(f))
+    }
 }
