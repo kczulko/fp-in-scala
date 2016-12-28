@@ -68,4 +68,9 @@ trait Applicative[F[_]] extends Functor[F] {
       override def map[A, B](fa: F[G[A]])(f: (A) => B): F[G[B]] =
         Applicative.this.map(fa)(g.map(_)(f))
     }
+
+  def sequenceMap[K,V](ofa: Map[K, F[V]]): F[Map[K,V]] =
+    ofa.foldRight(unit(Map[K,V]())) { (pair, b) =>
+      map2(pair._2, b)((v, l) => l + (pair._1 -> v))
+    }
 }
