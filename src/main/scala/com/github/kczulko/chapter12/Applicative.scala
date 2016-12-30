@@ -1,5 +1,6 @@
 package com.github.kczulko.chapter12
 
+import com.github.kczulko.chapter10.Monoid
 import com.github.kczulko.chapter11.Functor
 
 trait Applicative[F[_]] extends Functor[F] {
@@ -72,5 +73,16 @@ trait Applicative[F[_]] extends Functor[F] {
   def sequenceMap[K,V](ofa: Map[K, F[V]]): F[Map[K,V]] =
     ofa.foldRight(unit(Map[K,V]())) { (pair, b) =>
       map2(pair._2, b)((v, l) => l + (pair._1 -> v))
+    }
+}
+
+object Applicative {
+  type Const[M,B] = M
+
+  implicit def monoidApplicative[M](m: Monoid[M]): Applicative[({type f[x] = Const[M,x]})#f] =
+    new Applicative[({type f[x] = _root_.com.github.kczulko.chapter12.Applicative.Const[M, x]})#f] {
+      override def map2[A, B, C](fa: Const[M, A], fb: Const[M, B])(f: (A, B) => C): Const[M, C] = m.op(fa,fb)
+      override def apply[A, B](fab: Const[M, (A) => B])(fa: Const[M, A]): Const[M, B] = apply2(fab)(fa)
+      override def unit[A](a: => A): Const[M, A] = m.zero
     }
 }
