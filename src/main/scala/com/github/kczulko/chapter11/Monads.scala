@@ -1,6 +1,7 @@
 package com.github.kczulko.chapter11
 
 import com.github.kczulko.chapter6.State
+import com.github.kczulko.chapter7.Nonblocking.Par
 
 object Monads {
   def optionMonad[A] = new Monad[Option] {
@@ -45,4 +46,15 @@ object Monads {
     }
     override def unit[A](a: => A) = Right(a)
   }
+
+  implicit val function0Monad = new Monad[Function0] {
+    override def unit[A](a: => A): () => A = () => a
+    override def flatMap[A, B](ma: () => A)(f: (A) => () => B): () => B = f(ma())
+  }
+
+  implicit val parMonad = new Monad[Par] {
+    override def unit[A](a: => A): Par[A] = Par.lazyUnit(a)
+    override def flatMap[A, B](ma: Par[A])(f: (A) => Par[B]): Par[B] = Par.flatMap(ma)(f)
+  }
+
 }

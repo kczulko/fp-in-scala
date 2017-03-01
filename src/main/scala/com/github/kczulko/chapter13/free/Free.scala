@@ -1,6 +1,7 @@
 package com.github.kczulko.chapter13.free
 
 import com.github.kczulko.chapter11.Monad
+import com.github.kczulko.chapter13.Translate.~>
 
 import scala.annotation.tailrec
 
@@ -32,13 +33,6 @@ object Free {
   }
 
   def run[F[_],A](a: Free[F,A])(implicit monadF: Monad[F]): F[A] = {
-    @tailrec
-    def step(v: Free[F,A]): Free[F,A] = a match {
-      case FlatMap(FlatMap(x,f),g) => step(x flatMap(f(_) flatMap g))
-      case FlatMap(Return(x), f) => step(f(x))
-      case _ => v
-    }
-
     step(a) match {
       case Return(a) => monadF.unit(a)
       case Suspend(a) => a
@@ -47,5 +41,18 @@ object Free {
         case _ => sys.error("Impossible: `step` eliminates this cases.")
       }
     }
+  }
+
+  private def step[F[_],A](v: Free[F,A]): Free[F,A] = v match {
+    case FlatMap(FlatMap(x,f),g) => step(x flatMap(f(_) flatMap g))
+    case FlatMap(Return(x), f) => step(f(x))
+    case _ => v
+  }
+
+  def runFree[F[_], G[_], A](free: Free[F,A])(t: F ~> G)(implicit monadG: Monad[G]): G[A] = step(free) match {
+    case Return(a) => monadG.unit(a)
+    case Suspend(r) => t(r)
+    case FlatMap(Suspend(r),f) => monadG.flatMap(t(r))(a => runFree(f(a))(t))
+    case _ => sys.error("Impossible - `step` eliminates these cases")
   }
 }
