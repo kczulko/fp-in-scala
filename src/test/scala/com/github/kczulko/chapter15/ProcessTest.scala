@@ -41,4 +41,5 @@ class ProcessTest extends FlatSpec with Matchers {
   "dropWhile" should "remove elements from the beginning that does not fit given predicate" in {
     dropWhile[Int](_ < 4)(Stream(1,2,3,4,5,6,7,1)).toList shouldEqual List(4,5,6,7,1)
   }
+
 }
