@@ -35,5 +35,49 @@ object Process {
     case None => Halt()
   }
 
-}
+  def lift[I,O](f: I => O): Process[I,O] = liftOne(f) repeat
 
+  def filter[I](p: I => Boolean): Process[I,I] =
+    Await[I,I] {
+      case Some(i) if p(i) => Emit[I,I](i)
+      case _ => Halt()
+    } repeat
+
+  def sum: Process[Double,Double] = {
+    def loop(cv: Double): Process[Double,Double] = Await[Double,Double] {
+      case Some(v) => Emit(cv + v, loop(cv + v))
+      case _ => Halt()
+    }
+
+    loop(0.0)
+  }
+
+  def take[I](n: Int): Process[I,I] = n match {
+    case 0 => Halt()
+    case _ => Await[I,I] {
+      case Some(i) => Emit[I,I](i, take(n - 1))
+      case _ => Halt()
+    }
+  }
+
+  def drop[I](n: Int): Process[I,I] = n match {
+    case 0 => lift(identity)
+    case _ => Await[I,I] {
+      case Some(_) => drop(n - 1)
+      case _ => Halt()
+    }
+  }
+
+  def takeWhile[I](p: I => Boolean): Process[I,I] =
+    Await[I,I] {
+      case Some(i) if p(i) => Emit(i, takeWhile(p))
+      case _ => Halt()
+    }
+
+  def dropWhile[I](p: I => Boolean): Process[I,I] =
+    Await[I,I] {
+      case Some(i) if p(i) => dropWhile(p)
+      case Some(i) if !p(i) => Emit(i, lift(identity))
+      case _ => Halt()
+    }
+}
