@@ -43,14 +43,7 @@ object Process {
       case _ => Halt()
     } repeat
 
-  def sum: Process[Double,Double] = {
-    def loop(cv: Double): Process[Double,Double] = Await[Double,Double] {
-      case Some(v) => Emit(cv + v, loop(cv + v))
-      case _ => Halt()
-    }
-
-    loop(0.0)
-  }
+  def sum: Process[Double,Double] = loop(0.0)((i,s) => (i + s, i + s))
 
   def take[I](n: Int): Process[I,I] = n match {
     case 0 => Halt()
@@ -80,4 +73,20 @@ object Process {
       case Some(i) if !p(i) => Emit(i, lift(identity))
       case _ => Halt()
     }
+
+  def count[I]: Process[I,Int] = loop(0)((_,s) => (s + 1, s + 1))
+
+  def mean: Process[Double,Double] =
+    loop((0.0, 0))({
+      case (cur, (acc, idx)) => ((cur + acc)/(idx + 1), (acc + cur, idx + 1))
+    })
+
+  def loop[S,I,O](z: S)(f: (I,S) => (O,S)): Process[I,O] = {
+    Await {
+      case Some(i) => f(i,z) match {
+        case (o,s2) => Emit(o, loop(s2)(f))
+      }
+      case _ => Halt()
+    }
+  }
 }

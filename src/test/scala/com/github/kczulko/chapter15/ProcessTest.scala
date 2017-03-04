@@ -42,4 +42,14 @@ class ProcessTest extends FlatSpec with Matchers {
     dropWhile[Int](_ < 4)(Stream(1,2,3,4,5,6,7,1)).toList shouldEqual List(4,5,6,7,1)
   }
 
+  "count" should "just count :) elements in the input stream" in {
+    count(Stream(8,4,7,2,6)).toList shouldEqual (1 to 5 toList)
+    count(Stream()).toList shouldBe empty
+  }
+
+  "mean" should "return stream of mean values accordingly to the order of the stream" in {
+    mean(Stream(1,2,3,4,5)).toList shouldEqual List(1, 1.5, 2, 2.5, 3)
+    mean(Stream(0)).toList shouldEqual List(0)
+    mean(Stream()).toList shouldBe empty
+  }
 }
