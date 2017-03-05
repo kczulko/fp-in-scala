@@ -58,7 +58,7 @@ sealed trait Process[I,O] {
     }
     loop(0, this)
   }
-  
+
   def zipWithIndex2: Process[I,(O,Int)] = Process.zip(this, Process.count.map(_ - 1))
 }
 
@@ -79,6 +79,12 @@ object Process {
       case Some(i) if p(i) => Emit[I,I](i)
       case _ => Halt()
     } repeat
+
+  def exists[I](p: I => Boolean): Process[I,Boolean] =
+    Await[I,Boolean] {
+      case Some(i) => if (p(i)) Emit[I,Boolean](true) else Emit(false, exists(p))
+      case _ => Halt()
+    }
 
   def sum: Process[Double,Double] = loop(0.0)((i,s) => (i + s, i + s))
 

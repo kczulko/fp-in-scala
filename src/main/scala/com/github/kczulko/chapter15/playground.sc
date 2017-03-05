@@ -1,5 +1,4 @@
-import com.github.kczulko.chapter15.Process
-import com.github.kczulko.chapter15.Process.lift
+import com.github.kczulko.chapter15.Process.{exists, lift}
 
 val multiplyByTwo: Process[Int, Int] = lift[Int,Int](_ * 2)
 val modifiedStream: Stream[Int] = multiplyByTwo(Stream(1,2,3))

@@ -62,4 +62,14 @@ class ProcessTest extends FlatSpec with Matchers {
     lift[Int,Int](identity).zipWithIndex(Stream(5,4,3,2,1)).toList shouldEqual
       List((5,0),(4,1),(3,2),(2,3),(1,4))
   }
+
+  "zipWithIndex1" should "emit a running count of values emitted along with each value" in {
+    lift[Int,Int](identity).zipWithIndex2(Stream(5,4,3,2,1)).toList shouldEqual
+      List((5,0),(4,1),(3,2),(2,3),(1,4))
+  }
+
+  "exists" should "notify with true when stream contains element that matches given predicate" in {
+    exists[Int](_ % 2 == 0)(Stream(1,2,3,4,5,6)).toList shouldEqual List(false,true)
+  }
+
 }
