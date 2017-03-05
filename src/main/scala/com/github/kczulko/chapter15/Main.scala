@@ -14,7 +14,7 @@ object Main {
 
   implicit def stringToFile(s: String) = new File(s)
 
-  def processFile2[A](input: java.io.File, output: java.io.File, p: Process[String, Double]): TailRec[Unit] = TailRec {
+  def processFile[A](input: java.io.File, output: java.io.File, p: Process[String, Double]): TailRec[Unit] = TailRec {
     @tailrec
     def go(cur: Process[String,Double], ss: Iterator[String], o: BufferedWriter): Unit =
       cur match {
@@ -33,7 +33,7 @@ object Main {
     try {
       go(p,i.getLines, o)
     } finally {
-      o.close
+      o.close()
       i.close
     }
   }
@@ -42,7 +42,7 @@ object Main {
     val stringPredicate: String => Boolean = s => !s.isEmpty && !s.startsWith("#")
     val process: Process[String, Double] =
       filter(stringPredicate).map(_.toDouble) |> lift(toCelsius)
-    processFile2(inputFile, outputFile, process)
+    processFile(inputFile, outputFile, process)
   }
 
   def main(args: Array[String]): Unit = {
