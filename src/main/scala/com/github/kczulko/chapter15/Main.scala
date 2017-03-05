@@ -14,41 +14,37 @@ object Main {
 
   implicit def stringToFile(s: String) = new File(s)
 
-  def processFile[A](input: java.io.File, output: java.io.File, p: Process[String, Double]): TailRec[Unit] = TailRec {
+  def convert(input: java.io.File, output: java.io.File): TailRec[Unit] = TailRec {
     @tailrec
-    def go(cur: Process[String,Double], ss: Iterator[String], o: BufferedWriter): Unit =
+    def go(cur: Process[String,_], ss: Iterator[String]): Unit =
       cur match {
         case Halt() => ()
         case Await(recv) =>
           val next = if (ss.hasNext) recv(Some(ss.next)) else recv(None)
-          go(next, ss, o)
-        case Emit(h,t) =>
-          o.write(h.toString)
-          o.write("\n")
-          go(t, ss, o)
+          go(next, ss)
+        case Emit(_,t) =>
+          go(t, ss)
       }
 
-    val i = io.Source.fromFile(input)
-    val o = new BufferedWriter(new FileWriter(output))
+    val in = io.Source.fromFile(input)
+    val out = new BufferedWriter(new FileWriter(output))
     try {
-      go(p,i.getLines, o)
+      go(
+        filter[String](s => !s.isEmpty && !s.trim.startsWith("#")).map(_.toDouble) |>
+          lift(toCelsius) |>
+          lift[Double, Unit](d => out.write(d.toString + "\n")),
+        in.getLines
+      )
     } finally {
-      o.close()
-      i.close
+      out.close()
+      in.close
     }
-  }
-
-  def pureMain(inputFile: java.io.File, outputFile: java.io.File): TailRec[Unit] = {
-    val stringPredicate: String => Boolean = s => !s.isEmpty && !s.startsWith("#")
-    val process: Process[String, Double] =
-      filter(stringPredicate).map(_.toDouble) |> lift(toCelsius)
-    processFile(inputFile, outputFile, process)
   }
 
   def main(args: Array[String]): Unit = {
     TailRec.run {
       assert(args.length == 2)
-      pureMain(args(0), args(1))
+      convert(args(0), args(1))
     }
   }
 }
