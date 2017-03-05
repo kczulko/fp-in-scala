@@ -52,4 +52,14 @@ class ProcessTest extends FlatSpec with Matchers {
     mean(Stream(0)).toList shouldEqual List(0)
     mean(Stream()).toList shouldBe empty
   }
+
+  "|> operator" should "allow to write pipe of processes" in {
+    val pipe = lift[Int,Int](_ + 2) |> filter[Int](_ % 2 == 0)
+    pipe(Stream(1,2,3,4)).toList shouldEqual List(4,6)
+  }
+
+  "zipWithIndex" should "emit a running count of values emitted along with each value" in {
+    lift[Int,Int](identity).zipWithIndex(Stream(5,4,3,2,1)).toList shouldEqual
+      List((5,0),(4,1),(3,2),(2,3),(1,4))
+  }
 }
