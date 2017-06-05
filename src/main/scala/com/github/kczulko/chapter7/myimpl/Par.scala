@@ -3,6 +3,8 @@ package com.github.kczulko.chapter7.myimpl
 import java.util
 import java.util.concurrent.{Callable, ExecutorService, Future, TimeUnit}
 
+import scala.collection.immutable
+
 object Par {
   type Par[A] = ExecutorService => Future[A]
 
@@ -68,4 +70,15 @@ object Par {
   def map[A,B](p: Par[A])(f: A => B): Par[B] = {
     map2(p, unit(())){ case (a,_) => f(a) }
   }
+
+  def parMap[A,B](list: List[A])(f: A => B): Par[List[B]] = fork {
+    val listOfPars: List[Par[B]] = list.map(asyncF(f))
+    sequence(listOfPars)
+  }
+
+  def sequence[A](l: List[Par[A]]): Par[List[A]] = es => {
+    l.foldRight(unit(List[A]()))((parA, parList) => map2(parA, parList)(_ :: _))(es)
+  }
+
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = ???
 }
