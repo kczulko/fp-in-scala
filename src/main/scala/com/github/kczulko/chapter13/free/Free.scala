@@ -2,6 +2,7 @@ package com.github.kczulko.chapter13.free
 
 import com.github.kczulko.chapter11.Monad
 import com.github.kczulko.chapter13.Translate.~>
+import com.github.kczulko.chapter7.Nonblocking.Par
 
 import scala.annotation.tailrec
 
@@ -16,6 +17,8 @@ case class Suspend[F[_], A](a: F[A]) extends Free[F,A]
 case class FlatMap[F[_], A, B](a: Free[F,A], f: A => Free[F,B]) extends Free[F,B]
 
 object Free {
+  type IO[A] = Free[Par,A]
+
   def freeMonad[F[_]]: Monad[({type f[a] = Free[F,a]})#f] = new Monad[({type f[a] = Free[F, a]})#f] {
     override def flatMap[A, B](ma: Free[F, A])(f: (A) => Free[F, B]): Free[F, B] = ma flatMap f
     override def unit[A](a: => A): Free[F, A] = Return(a)
