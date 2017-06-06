@@ -25,21 +25,23 @@ object Par {
   // caller of run can choose when to timeout etc.
   def run[A](es: ExecutorService)(par: Par[A]): Future[A] = par(es)
 
-  def map2[A,B,C](a: Par[A], b: Par[B])(f: (A, B) => C): Par[C] = es => {
-    new Future[C] {
+  def map3[A,B,C,D](a: Par[A], b: Par[B], c: Par[C])(f: (A,B,C) => D): Par[D] =
+    map2(map2(a,b)(f.curried(_)(_)), c)(_(_))
 
-      var invoked: Option[util.List[Future[Any]]] = None
+  def map4[A,B,C,D,E](a: Par[A], b: Par[B], c: Par[C], d: Par[D])(f: (A,B,C,D) => E): Par[E] =
+    map2(map2(map2(a,b)(f.curried(_)(_)), c)(_(_)), d)(_(_))
+
+  def map5[A,B,C,D,E,F](a: Par[A], b: Par[B], c: Par[C], d: Par[D], e: Par[E])(f: (A,B,C,D,E) => F): Par[F] =
+    map2(map4(a,b,c,d)(f.curried(_)(_)(_)(_)), e)(_(_))
+
+  def map2[A,B,C](a: Par[A], b: Par[B])(f: (A, B) => C): Par[C] = es =>
+    new Future[C] {
 
       val aCallable = new Callable[A] {
         override def call(): A = a(es).get()
       }
       val bCallable = new Callable[B] {
         override def call(): B = b(es).get()
-      }
-
-      private def await[V](future: => Future[V]): V = {
-        while (!future.isDone && !future.isCancelled) {}
-        future.get()
       }
 
       override def cancel(mayInterruptIfRunning: Boolean): Boolean = false
@@ -57,13 +59,12 @@ object Par {
         val all = es.invokeAll(callables, timeout, unit)
 
         // wait for the result
-        val first = await(all.get(0).asInstanceOf[Future[A]])
-        val second = await(all.get(1).asInstanceOf[Future[B]])
+        val first = all.get(0).asInstanceOf[Future[A]].get()
+        val second = all.get(1).asInstanceOf[Future[B]].get()
 
         f(first, second)
       }
     }
-  }
 
   def asyncF[A,B](f: A => B): A => Par[B] = a => lazyUnit(f(a))
 
@@ -76,9 +77,11 @@ object Par {
     sequence(listOfPars)
   }
 
-  def sequence[A](l: List[Par[A]]): Par[List[A]] = es => {
-    l.foldRight(unit(List[A]()))((parA, parList) => map2(parA, parList)(_ :: _))(es)
-  }
+  def sequence[A](l: List[Par[A]]): Par[List[A]] =
+    l.foldRight(unit(List[A]()))((parA, parList) => map2(parA, parList)(_ :: _))
 
-  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = ???
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = {
+    val filteredList = l.map(asyncF((a: A) => if (f(a)) List(a) else List()))
+    map(sequence(filteredList))(_.flatten)
+  }
 }
