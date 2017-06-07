@@ -84,4 +84,6 @@ object Par {
     val filteredList = l.map(asyncF((a: A) => if (f(a)) List(a) else List()))
     map(sequence(filteredList))(_.flatten)
   }
+
+  def delay[A](par: => Par[A]): Par[A] = es => par(es)
 }
