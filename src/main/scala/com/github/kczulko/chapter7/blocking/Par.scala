@@ -90,11 +90,13 @@ object Par {
 
   def delay[A](par: => Par[A]): Par[A] = es => par(es)
 
-  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
-    Par.fork {
-      map2(sequence(choices),n)(_(_))
-    }
+  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] = flatMap(n)(choices(_))
 
-  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
-    choiceN(map(cond)(v => if (v) 0 else 1))(List(t, f))
+  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] = flatMap(cond)(if (_) t else f)
+
+  def choiceMap[K,V](cond: Par[K])(m: Map[K, Par[V]]): Par[V] = flatMap(cond)(m(_))
+
+  def flatMap[A,B](par: Par[A])(f: A => Par[B]): Par[B] = join(map(par)(f))
+
+  def join[A](a: Par[Par[A]]): Par[A] = es => a(es).get()(es)
 }
