@@ -1,9 +1,12 @@
-package com.github.kczulko.chapter7.myimpl
+package com.github.kczulko.chapter7.blocking
 
 import java.util
 import java.util.concurrent.{Callable, ExecutorService, Future, TimeUnit}
 
+import akka.actor.Status.Success
+
 import scala.collection.immutable
+import scala.util.{Failure, Try}
 
 object Par {
   type Par[A] = ExecutorService => Future[A]
@@ -86,4 +89,12 @@ object Par {
   }
 
   def delay[A](par: => Par[A]): Par[A] = es => par(es)
+
+  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+    Par.fork {
+      map2(sequence(choices),n)(_(_))
+    }
+
+  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    choiceN(map(cond)(v => if (v) 0 else 1))(List(t, f))
 }
