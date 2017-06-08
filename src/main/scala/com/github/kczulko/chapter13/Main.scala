@@ -3,7 +3,7 @@ package com.github.kczulko.chapter13
 import com.github.kczulko.chapter11.Monads
 import com.github.kczulko.chapter13.Console._
 import com.github.kczulko.chapter13.free.Free
-import com.github.kczulko.chapter7.Nonblocking.Par
+import com.github.kczulko.chapter7.blocking.Par.Par
 
 object Main {
   import Monads.function0Monad

@@ -1,7 +1,8 @@
 package com.github.kczulko.chapter13.async
 
 import com.github.kczulko.chapter11.Monad
-import com.github.kczulko.chapter7.Nonblocking.Par
+import com.github.kczulko.chapter7.blocking.Par
+import com.github.kczulko.chapter7.blocking.Par.Par
 
 import scala.annotation.tailrec
 

@@ -1,7 +1,8 @@
 package com.github.kczulko.chapter11
 
 import com.github.kczulko.chapter6.State
-import com.github.kczulko.chapter7.Nonblocking.Par
+import com.github.kczulko.chapter7.blocking.Par
+import com.github.kczulko.chapter7.blocking.Par.Par
 
 object Monads {
   def optionMonad[A] = new Monad[Option] {

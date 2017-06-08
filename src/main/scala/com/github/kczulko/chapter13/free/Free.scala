@@ -2,7 +2,7 @@ package com.github.kczulko.chapter13.free
 
 import com.github.kczulko.chapter11.Monad
 import com.github.kczulko.chapter13.Translate.~>
-import com.github.kczulko.chapter7.Nonblocking.Par
+import com.github.kczulko.chapter7.blocking.Par.Par
 
 import scala.annotation.tailrec
 

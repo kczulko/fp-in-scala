@@ -2,7 +2,8 @@ package com.github.kczulko.chapter13
 
 import com.github.kczulko.chapter13.Translate.~>
 import com.github.kczulko.chapter13.free.{Free, Suspend}
-import com.github.kczulko.chapter7.Nonblocking.Par
+import com.github.kczulko.chapter7.blocking.Par
+import com.github.kczulko.chapter7.blocking.Par.Par
 
 sealed trait Console[A] {
   def toPar: Par[A]
