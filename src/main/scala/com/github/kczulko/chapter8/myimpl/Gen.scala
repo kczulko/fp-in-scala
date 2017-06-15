@@ -2,9 +2,22 @@ package com.github.kczulko.chapter8.myimpl
 
 import com.github.kczulko.chapter6.State
 import com.github.kczulko.chapter8.myimpl.Prop.{FailedCase, SuccessCount}
-import com.kczulko.chapter6.RNG
+import com.kczulko.chapter6.{RNG, SimpleRNG}
 
-case class Gen[A](sample: State[RNG,A])
+case class Gen[A](sample: State[RNG,A]) {
+  def flatMap[B](f: A => Gen[B]): Gen[B] =
+    Gen(
+      State(
+        rng => {
+          val (a, nextRng) = sample.run(rng)
+          f(a).sample.run(nextRng)
+        }
+      )
+    )
+
+  def listOfN(size: Gen[Int]): Gen[List[A]] =
+    size.flatMap(n => Gen.listOfN(n,this))
+}
 
 trait Prop {
   def check: Either[(FailedCase, SuccessCount), SuccessCount]
@@ -35,6 +48,7 @@ object Gen {
   def unit[A](a: => A): Gen[A] = Gen[A](State.unit(a))
 
   def boolean: Gen[Boolean] = {
+    SimpleRNG
     val binaryGen = choose(0,2)
     Gen[Boolean](State[RNG,Boolean](rng => {
       val (i,nextRng) = binaryGen.sample.run(rng)
@@ -49,5 +63,25 @@ object Gen {
   def listOf[A](gen: Gen[A]): Gen[List[A]] = ???
 
   def forAll[A](gen: Gen[A])(p: A => Boolean): Prop = ???
+
+  def union[A](gen1: Gen[A], gen2: Gen[A]): Gen[A] = Gen[A](State[RNG,A](rng => {
+    val (choose,_) = boolean.sample.run(rng)
+    if (choose) {
+      gen1.sample.run(rng)
+    } else {
+      gen2.sample.run(rng)
+    }
+  }))
+
+  def union2[A](gen1: Gen[A], gen2: Gen[A]) = boolean.flatMap(if(_) gen1 else gen2)
+
+  def weighted[A](g1: (Gen[A], Double), g2: (Gen[A], Double)): Gen[A] = {
+    val (gen1,w1) = g1
+    val (gen2,w2) = g2
+
+    assert(w1 + w2 == 1.0)
+
+    Gen[Double](SimpleRNG(0).double).flatMap(v => if (v % (w1+w1) <= w1) gen1 else gen2)
+  }
 }
 
