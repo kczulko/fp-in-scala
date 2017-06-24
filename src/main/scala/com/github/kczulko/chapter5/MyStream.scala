@@ -108,6 +108,12 @@ trait MyStream[+A] {
   def append[B >: A](s: => MyStream[B]): MyStream[B] = s.foldRight(this: MyStream[B])((a, b) => cons(a,b))
 
   def flatMap[B](f: A => MyStream[B]): MyStream[B] = foldRight(Empty: MyStream[B])((a, b) => b append f(a))
+
+  def find(p: A => Boolean): Option[A] = this match {
+    case Cons(h,_) if p(h()) => Some(h())
+    case Empty => None
+    case Cons(_, t) => t().find(p)
+  }
 }
 
 case object Empty extends MyStream[Nothing] {

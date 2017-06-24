@@ -106,4 +106,12 @@ class MyStreamTest extends FlatSpec with Matchers {
   "tails2" should "" in {
     { MyStream(1,2,3) tails2 }.map(_.toList).toList shouldEqual List(List(1,2,3), List(2,3), List(3), List())
   }
+
+  "find" should "return option of the element that matches the predicate" in {
+    MyStream(1,2,3,4,5,6).find(_ == 5) shouldEqual Some(5)
+  }
+
+  it should s"return $None when there was no matching element in the stream" in {
+    MyStream(1,2,3,4,5).find(_ == 6) shouldEqual None
+  }
 }
