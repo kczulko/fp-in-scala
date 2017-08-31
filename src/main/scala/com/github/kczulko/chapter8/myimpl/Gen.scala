@@ -2,12 +2,12 @@ package com.github.kczulko.chapter8.myimpl
 
 import com.github.kczulko.chapter5.MyStream
 import com.github.kczulko.chapter6.State
-import com.github.kczulko.chapter8.myimpl.Prop.{FailedCase, SuccessCount, TestCases}
+import com.github.kczulko.chapter8.myimpl.Prop._
 import com.kczulko.chapter6.{RNG, SimpleRNG}
 
 import scala.util.{Failure, Success, Try}
 
-case class Gen[A](sample: State[RNG,A]) {
+case class Gen[+A](sample: State[RNG,A]) {
   def flatMap[B](f: A => Gen[B]): Gen[B] =
     Gen(
       State(
@@ -22,16 +22,6 @@ case class Gen[A](sample: State[RNG,A]) {
     size.flatMap(n => Gen.listOfN(n,this))
 }
 
-//trait Prop {
-//  def check: Result
-//  def &&(other: Prop) = (check, other.check) match {
-//    case (Right(a), Right(b)) => Right(a + b)
-//    case (Right(a), Left((f,b))) => Left((f, a + b))
-//    case (Left((f,a)), Right(b)) => Left((f, a + b))
-//    case (Left((fa,a)), Left((fb,b))) => Left(s"$fa\n$fb", a + b)
-//  }
-//}
-
 sealed trait Result {
   def isFalsified: Boolean
 }
@@ -42,20 +32,19 @@ case class Falsified(failure: FailedCase, successes: SuccessCount) extends Resul
   override def isFalsified: Boolean = true
 }
 
-case class Prop(run: (TestCases, RNG) => Result) {
-  def &&(p: Prop): Prop = Prop {
-    (n, rng) => (this.run(n,rng), p.run(n,rng)) match {
-      case (Passed, Passed) => Passed
-      case (Falsified(fc1, suc1), Falsified(fc2, suc2)) => Falsified(s"$fc1\n$fc2", suc1 + suc2)
-      case (f @ Falsified(_, _), _) => f
-      case (_, f @ Falsified(_, _)) => f
-    }
+case class Prop(run: (MaxSize,TestCases,RNG) => Result) {
+  def &&(other: Prop): Prop = Prop {
+    (ms,tc,rng) =>
+      run(ms,tc,rng) match {
+        case Passed => other.run(ms,tc,rng)
+        case any => any
+      }
   }
 
   def ||(p: Prop): Prop = Prop {
-    (n,rng) => (this.run(n,rng), p.run(n,rng)) match {
-      case (Falsified(fc1, suc1), Falsified(fc2, suc2)) => Falsified(s"$fc1\n$fc2", suc1 + suc2)
-      case _ => Passed
+    (m,n,rng) => this.run(m,n,rng) match {
+      case Passed => Passed
+      case _ => p.run(m,n,rng)
     }
   }
 }
@@ -64,6 +53,13 @@ object Prop {
   type TestCases = Int
   type SuccessCount = Int
   type FailedCase =  String
+  type MaxSize = Int
+
+  def run(p: Prop, maxSize: Int = 100, testCases: Int = 100, rng: RNG = SimpleRNG.apply(System.currentTimeMillis)): Unit =
+    p.run(maxSize,testCases,rng) match {
+      case Passed => println(s"+ OK, passed $testCases tests.")
+      case Falsified(failedCase, successCount) => println(s"! Falsified after $successCount passed tests:\n $failedCase")
+    }
 }
 
 object Gen {
@@ -115,7 +111,7 @@ object Gen {
   }
 
   def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
-    (n,rng) =>
+    (_, n,rng) =>
       val generatedStream = MyStream.unfold(rng)(randGen => Some(as.sample.run(randGen)))
 
       generatedStream.zipWith(MyStream.from(0))((_,_)).take(n).map {
@@ -125,6 +121,38 @@ object Gen {
           case _ => Falsified(a.toString, i)
         }
       }.find(_.isFalsified).getOrElse(Passed)
+  }
+}
+
+case class SGen[+A](forsize: Int => Gen[A]) {
+  def flatMap[B](f: A => SGen[B]): SGen[B] =
+    SGen(s =>
+      forsize(s).flatMap(a => f(a).forsize(s))
+    )
+}
+
+case object SGen {
+
+  def listOf[A](g: Gen[A]): SGen[List[A]] = SGen {
+    forsize => Gen.listOfN(forsize, g)
+  }
+
+  def nonEmptyListOf[A](g: Gen[A]): SGen[List[A]] = SGen {
+    forsize => Gen.listOfN(forsize max 1, g)
+  }
+
+  def forAll[A](sGen: SGen[A])(f: A => Boolean): Prop = forAll(sGen.forsize)(f)
+
+  def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+    (max,n,rng) => {
+      val casesPerSize = (n + (max - 1)) / max
+      val props: Stream[Prop] = Stream.from(0).take((n min max) + 1).map(i => Gen.forAll(g(i))(f))
+      val prop: Prop = props.map(p => Prop{
+        (max,_,rng) => p.run(max, casesPerSize, rng)
+      }).toList.reduce(_ && _)
+
+      prop.run(max,n,rng)
+    }
   }
 }
 

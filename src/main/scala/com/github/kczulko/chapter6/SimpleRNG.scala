@@ -43,6 +43,29 @@ sealed trait RNG {
     }
 }
 
+object RNG {
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (i, r) = rng.nextInt
+    (if (i < 0) -(i + 1) else i, r)
+  }
+
+  // We generate an integer >= 0 and divide it by one higher than the
+  // maximum. This is just one possible solution.
+  def double(rng: RNG): (Double, RNG) = {
+    val (i, r) = nonNegativeInt(rng)
+    (i / (Int.MaxValue.toDouble + 1), r)
+  }
+
+  def boolean(rng: RNG): (Boolean, RNG) =
+    rng.nextInt match { case (i,rng2) => (i%2==0,rng2) }
+
+  def intDouble(rng: RNG): ((Int, Double), RNG) = {
+    val (i, r1) = rng.nextInt
+    val (d, r2) = double(r1)
+    ((i, d), r2)
+  }
+}
+
 case class SimpleRNG(seed: Long) extends RNG {
   override def nextInt: (Int, RNG) = {
     val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
