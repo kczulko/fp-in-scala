@@ -1,6 +1,11 @@
 package com.github.kczulko.chapter8.myimpl
 
-import com.kczulko.chapter6.SimpleRNG
+import java.util.concurrent.Executors
+
+import com.github.kczulko.chapter12.Traverses.Tree
+import com.github.kczulko.chapter3.datastructures.BinTree
+import com.github.kczulko.chapter7.blocking.Par
+import com.kczulko.chapter6.{RNG, SimpleRNG}
 import org.scalatest.{FlatSpec, Matchers}
 
 class SGenTest extends FlatSpec with Matchers {
@@ -8,7 +13,7 @@ class SGenTest extends FlatSpec with Matchers {
   it should "return success while validating List.max function" in {
 
     val smallInt = Gen.choose(-10, 10)
-    val maxProp = SGen.forAll(SGen.nonEmptyListOf(smallInt)) {
+    val maxProp = Prop.forAll(SGen.nonEmptyListOf(smallInt)) {
       list =>
         val max = list.max
         !list.exists(_ > max)
@@ -21,7 +26,7 @@ class SGenTest extends FlatSpec with Matchers {
 
     def propOf(f: List[Int] => Boolean) = {
       val ints = Gen.choose(-100, 100)
-      SGen.forAll(SGen.nonEmptyListOf(ints))(f)
+      Prop.forAll(SGen.nonEmptyListOf(ints))(f)
     }
 
     val lastIsMax = propOf {
@@ -53,4 +58,53 @@ class SGenTest extends FlatSpec with Matchers {
       ) shouldEqual Passed
   }
 
+  "it" should "test Par.fork property" in {
+    val gen = Gen.choose(1,100).map(Par.unit)
+    val es = Executors.newFixedThreadPool(8)
+
+    val prop = Prop.forAllPar(gen){
+      parA =>
+        Par.map2(parA, Par.fork(parA)) {
+          _ equals _
+        }
+    }
+
+    try {
+      prop.run(
+        100,
+        100,
+        SimpleRNG(System.currentTimeMillis)
+      ) shouldEqual Passed
+    } finally {
+      es.shutdown()
+    }
+  }
+
+  it should "allow to define & test List.take property" in {
+    val listGen = SGen.nonEmptyListOf(Gen.choose(0, 100))
+    val sizeGen = listGen.flatMap(l =>
+      SGen(_ => Gen.choose(0, l.size))
+    )
+
+    val prop = Prop.forAll(listGen ** sizeGen) {
+      case (list, n) =>
+        list.take(n).size == n
+    }
+
+    prop.run(100, 100, SimpleRNG(System.currentTimeMillis())) shouldEqual Passed
+  }
+
+//  it should "test behavior of Tree.fold function" in {
+//    val sgen = SGen(forsize =>
+//      Gen.choose(0, 100).map(depth => BinTree.unfold(depth, 1))
+//    )
+//
+//    val prop = Prop.forAll(sgen) {
+//      (binTree: BinTree[Int]) =>
+//        //BinTree.fold(binTree, (a: Int) => a)((l, r) => l() + r()) == Math.pow(2, BinTree.depth(binTree))
+//        true
+//    }
+//
+//    prop.run(100, 100, SimpleRNG(System.currentTimeMillis))
+//  }
 }

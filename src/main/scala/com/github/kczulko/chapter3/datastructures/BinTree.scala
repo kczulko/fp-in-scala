@@ -6,7 +6,7 @@ case class Leaf[A](value: A) extends BinTree[A]
 case class Branch[A](left: BinTree[A], right: BinTree[A]) extends BinTree[A]
 
 object BinTree {
-  def size[A](binTree: BinTree[A]): Int = fold(binTree, (a : A) => 1)((x,y) => 1 + x() + y())
+  def size[A](binTree: BinTree[A]): Int = fold(binTree, (_: A) => 1)((x,y) => 1 + x() + y())
 
   def maximum(binTree: BinTree[Int]): Int = fold(binTree, (a: Int) => a)(_() max _())
 
@@ -19,6 +19,13 @@ object BinTree {
   def fold[A,B](binTree: BinTree[A], b: A => B)(f: (() => B, () => B) => B): B = binTree match {
     case Leaf(v) => b(v)
     case Branch(l, r) => f(() => fold(l,b)(f), () => fold(r,b)(f))
+  }
+
+  def unfold[A](depth: Int, a: => A): BinTree[A] = {
+    depth match {
+      case i if i <= 1 => Leaf(a)
+      case _ => Branch(unfold(depth - 1, a), unfold(depth - 1, a))
+    }
   }
 }
 

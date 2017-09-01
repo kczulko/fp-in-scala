@@ -20,4 +20,11 @@ class BinTreeTests extends FlatSpec with Matchers {
     map(Branch(Branch(Leaf(10), Leaf(20)), Leaf(30)))(_ - 1) should be
       (Branch(Branch(Leaf(9), Leaf(19)), Leaf(29)))
   }
+
+  "unfold" should "crete tree of desired depth" in {
+    val depth = 4
+    val defaultLeafValue = 1
+
+    BinTree.depth(BinTree.unfold(depth, defaultLeafValue)) shouldEqual depth
+  }
 }
