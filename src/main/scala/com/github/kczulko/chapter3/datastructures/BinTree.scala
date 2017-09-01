@@ -22,6 +22,7 @@ object BinTree {
   }
 
   def unfold[A](depth: Int, a: => A): BinTree[A] = {
+    assert(depth >= 0)
     depth match {
       case i if i <= 1 => Leaf(a)
       case _ => Branch(unfold(depth - 1, a), unfold(depth - 1, a))

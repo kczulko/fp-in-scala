@@ -94,17 +94,15 @@ class SGenTest extends FlatSpec with Matchers {
     prop.run(100, 100, SimpleRNG(System.currentTimeMillis())) shouldEqual Passed
   }
 
-//  it should "test behavior of Tree.fold function" in {
-//    val sgen = SGen(forsize =>
-//      Gen.choose(0, 100).map(depth => BinTree.unfold(depth, 1))
-//    )
-//
-//    val prop = Prop.forAll(sgen) {
-//      (binTree: BinTree[Int]) =>
-//        //BinTree.fold(binTree, (a: Int) => a)((l, r) => l() + r()) == Math.pow(2, BinTree.depth(binTree))
-//        true
-//    }
-//
-//    prop.run(100, 100, SimpleRNG(System.currentTimeMillis))
-//  }
+  it should "test behavior of Tree.fold function" in {
+
+    val sgen = SGen(s => Gen.choose(0, s max 1).map(depth => BinTree.unfold(depth, 1)))
+
+    val prop = Prop.forAll(sgen) {
+      (binTree: BinTree[Int]) =>
+        BinTree.fold(binTree, (a: Int) => a)((l, r) => l() + r()) == Math.pow(2, BinTree.depth(binTree))
+    }
+
+    prop.run(20, 100, SimpleRNG(System.currentTimeMillis))
+  }
 }
