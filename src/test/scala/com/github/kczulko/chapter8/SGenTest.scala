@@ -1,4 +1,4 @@
-package com.github.kczulko.chapter8.myimpl
+package com.github.kczulko.chapter8
 
 import java.util.concurrent.Executors
 
@@ -98,9 +98,8 @@ class SGenTest extends FlatSpec with Matchers {
 
     val sgen = SGen(s => Gen.choose(0, s max 1).map(depth => BinTree.unfold(depth, 1)))
 
-    val prop = Prop.forAll(sgen) {
-      (binTree: BinTree[Int]) =>
-        BinTree.fold(binTree, (a: Int) => a)((l, r) => l() + r()) == Math.pow(2, BinTree.depth(binTree))
+    val prop = Prop.forAll(sgen) { binTree =>
+        BinTree.fold(binTree, identity[Int])((l, r) => l() + r()) == Math.pow(2, BinTree.depth(binTree))
     }
 
     prop.run(20, 100, SimpleRNG(System.currentTimeMillis))

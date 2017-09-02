@@ -1,12 +1,11 @@
-package com.github.kczulko.chapter8.myimpl
+package com.github.kczulko.chapter8
 
 import java.util.concurrent.{ExecutorService, Executors}
 
 import com.github.kczulko.chapter5.MyStream
 import com.github.kczulko.chapter6.State
-import com.github.kczulko.chapter7.blocking.Par
 import com.github.kczulko.chapter7.blocking.Par.Par
-import com.github.kczulko.chapter8.myimpl.Prop._
+import com.github.kczulko.chapter8.Prop.{FailedCase, MaxSize, SuccessCount, TestCases}
 import com.kczulko.chapter6.{RNG, SimpleRNG}
 
 import scala.util.{Failure, Success, Try}

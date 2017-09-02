@@ -15,11 +15,11 @@ trait MyStream[+A] {
   )
 
   def zipWith[B, C](other: MyStream[B])(f: (A, B) => C): MyStream[C] =
-    unfold((this, other))(_ match {
-      case (_, Empty) => None
-      case (Empty, _) => None
-      case (Cons(h1, t1), Cons(h2, t2)) => Some((f(h1(), h2()), (t1(), t2())))
-    })
+    unfold((this, other))
+      {
+        case (_, Empty) | (Empty, _) => None
+        case (Cons(h1, t1), Cons(h2, t2)) => Some((f(h1(), h2()), (t1(), t2())))
+      }
 
   def zipAll[B](other: MyStream[B]): MyStream[(Option[A], Option[B])] =
     unfold((this, other)) {
