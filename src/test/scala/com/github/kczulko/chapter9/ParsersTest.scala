@@ -1,6 +1,5 @@
 package com.github.kczulko.chapter9
 
-import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 
