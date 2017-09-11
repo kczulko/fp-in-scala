@@ -8,7 +8,7 @@ class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
   type F[+_]
 
   ignore /*"parser"*/ should "hold basic law for char parser" in {
-    val parsers = new Parsers[String, F] {}
+    val parsers = new Parsers[F] {}
 
     import parsers._
 
@@ -16,7 +16,7 @@ class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   ignore should "hold associativity law when run with alternative parsers" in {
-    val parsers = new Parsers[String, F] {}
+    val parsers = new Parsers[F] {}
 
     import parsers._
 
@@ -25,7 +25,7 @@ class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   ignore should "repeat matches while called with listOfN" in {
-    val parsers = new Parsers[String, F] {}
+    val parsers = new Parsers[F] {}
 
     import parsers._
 
