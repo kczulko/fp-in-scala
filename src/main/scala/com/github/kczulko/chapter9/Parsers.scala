@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 import scala.util.matching.Regex
 
 object Parsers {
-  type Parser[+A] = Location => Result[A]
+  type Parser[+A] = ParseState => Result[A]
 
   sealed trait Result[+A] {
     def mapError(f: ParserError => ParserError) = this match {
@@ -56,52 +56,54 @@ object Parsers {
     def advanceBy(n: Int): Location = copy(offset = offset + n)
   }
 
+  case class ParseState(loc: Location) {
+    def advanceBy(numChars: Int): ParseState =
+      copy(loc = loc.copy(offset = loc.offset + numChars))
+    def input: String = loc.input.substring(loc.offset)
+    def slice(n: Int): String = loc.input.substring(loc.offset, loc.offset + n)
+  }
+
   def run[A](p: Parser[A])(input: String): Either[ParserError, A] = {
     runL(p)(Location(input))
   }
 
-  def runL[A](p: Parser[A])(location: Location) = p(location) match {
+  def runL[A](p: Parser[A])(location: Location) = p(ParseState(location)) match {
     case Success(a, _) => Right(a)
     case Failure(pe, _) => Left(pe)
   }
 
   // primitives
-  def stringP(s: String): Parser[String] = location => {
-    val startingString = location.input.substring(location.offset)
-
-    if (startingString.startsWith(s)) {
+  def stringP(s: String): Parser[String] = state => {
+    if (state.input.startsWith(s)) {
       Success(s, s.length)
-    } else if (startingString.isEmpty) {
-      Failure(location.toError(s"Expected '$s' but found '${location.input}'"), true)
+    } else if (state.input.isEmpty) {
+      Failure(state.loc.toError(s"Expected '$s' but found '${state.input}'"), true)
     } else {
-      Failure(location.toError(s"Expected '$s' but found '${location.input}'"), isCommitted = false)
+      Failure(state.loc.toError(s"Expected '$s' but found '${state.input}'"), isCommitted = false)
     }
   }
 
-  def slice[A](p: Parser[A]): Parser[String] = location => {
+  def slice[A](p: Parser[A]): Parser[String] = state => {
     @tailrec
-    def go(result: String, loc: Location): Result[String] = {
-      p(loc) match {
-        case Success(_, cc) => {
-          val w = "dupa"
-          go(result + loc.input.substring(loc.offset, loc.offset + cc), loc.advanceBy(cc))
-        }
-        case Failure(_,true) => Success(result, loc.offset)
+    def go(result: String, s: ParseState): Result[String] = {
+      p(s) match {
+        case Success(_, cc) => go(result + s.slice(cc), s.copy(loc = s.loc.advanceBy(cc)))
+        case Failure(_,true) => Success(result, s.loc.offset)
         case f @ Failure(_,_) => f
       }
     }
 
-    go("", location)
+    go("", state)
   }
-  def many[A](p: Parser[A]): Parser[List[A]] = location => {
+  def many[A](p: Parser[A]): Parser[List[A]] = state => {
     @tailrec
-    def go(res: List[A], loc: Location): Result[List[A]] = p(loc) match {
-      case Success(a, cc) => go(a :: res, loc.advanceBy(cc))
-      case Failure(_,true) => Success(res, loc.offset)
+    def go(res: List[A], s: ParseState): Result[List[A]] = p(s) match {
+      case Success(a, cc) => go(a :: res, s.copy(loc = s.loc.advanceBy(cc)))
+      case Failure(_,true) => Success(res, s.loc.offset)
       case f @ Failure(_,_) => f
     }
 
-    go(Nil, location)
+    go(Nil, state)
   }
 
   def product[A,B](a: Parser[A], b: => Parser[B]): Parser[(A,B)] = flatMap(a) {
@@ -126,10 +128,10 @@ object Parsers {
 
   implicit def string(s: String): Parser[String] = stringP(s)
 
-  implicit def regex(r: Regex): Parser[String] = l =>
-    r.findFirstMatchIn(l.input.substring(l.offset))
-      .map(m => Success(l.input.substring(l.offset).substring(m.start, m.end), l.offset + m.end - 1))
-      .getOrElse(Failure(l.toError(s"Cannot find $r within ${l.input}"), isCommitted = true))
+  implicit def regex(r: Regex): Parser[String] = state =>
+    r.findFirstMatchIn(state.input)
+      .map(m => Success(state.input.substring(m.start, m.end), m.end))
+      .getOrElse(Failure(state.loc.toError(s"Cannot find $r within ${state.input}"), isCommitted = true))
 
   def char(c: Char): Parser[Char] = string(c.toString).map(_.charAt(0))
   def succeed[A](a: A): Parser[A] = stringP("").map(_ => a)
@@ -154,8 +156,8 @@ object Parsers {
   implicit def operators[A](p: Parser[A]) = ParserOps(p)
   implicit def asStringParser[A](a: A)(implicit f: A => Parser[String]): ParserOps[String] = ParserOps(f(a))
 
-  def label[A](msg: String)(p: Parser[A]): Parser[A] = l => p(l).mapError(_.label(msg))
-  def scope[A](msg: String)(p: Parser[A]): Parser[A] = l => p(l).mapError(_.push(l, msg))
+  def label[A](msg: String)(p: Parser[A]): Parser[A] = state => p(state).mapError(_.label(msg))
+  def scope[A](msg: String)(p: Parser[A]): Parser[A] = state => p(state).mapError(_.push(state.loc, msg))
 
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = Parsers.or(p, p2)

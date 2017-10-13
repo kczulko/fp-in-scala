@@ -75,12 +75,14 @@ class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
     val parser: Parser[((String, String), String)] = "a" ** "b" ** "c"
 
     Parsers.run(parser)("abc") shouldEqual Right((("a", "b"), "c"))
-//    Parsers.run(""""""" ** "\\d+".r ** """"""")(""""2"""") shouldEqual Right((("\"", "any"), "\""))
+    Parsers.run(""""""" ** "\\d+".r ** """"""")(""""22"""") shouldEqual Right((("\"", "22"), "\""))
   }
 
   "regex" should "allow to parse with given regex expression" in {
-    val parser: Parser[String] = """\w+""".r
+    val word: Parser[String] = """\w+""".r
+    val quote: Parser[String] = """""""
 
-    (""""""" ** parser ** """"""").apply(Location(""""dz"""")) shouldEqual Success((("\"", "dz"), "\""), 4)
+    ("-" ** word ** "-")(ParseState(Location("""-dz-"""))) shouldEqual Success((("-", "dz"), "-"), 4)
+    Parsers.run("{" ** quote ** word ** quote ** "}")("""{"dz"}""") shouldEqual Right( (((("{", "\""), "dz"),"\""),"}") )
   }
 }
