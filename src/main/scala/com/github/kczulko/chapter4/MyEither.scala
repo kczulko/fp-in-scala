@@ -1,5 +1,4 @@
-package com.kczulko.chapter4
-
+package com.github.kczulko.chapter4
 
 sealed trait MyEither[+E,+A] {
   def map[B](f: A => B): MyEither[E, B]
@@ -50,13 +49,7 @@ object MyEither {
     }*/
 
   def traverse[E,A,B](as: List[A])(f: A => MyEither[E,B]): MyEither[E, List[B]] =
-    as.foldLeft {
-      as match {
-        // how (and WHAT!) to return when as match Nil?
-        case _ => (MyRight(List(): List[B]): MyEither[E, List[B]])
-
-      }
-    } {
-      (x,y) => x.flatMap(vx => f(y).map(vx ++ List(_)))
+    as.foldRight(MyRight(List.empty[B]): MyEither[E, List[B]]) {
+      (a, b) => b.map2(f(a))((list, elem) => elem :: list)
     }
 }

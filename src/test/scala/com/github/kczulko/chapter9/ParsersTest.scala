@@ -1,14 +1,13 @@
 package com.github.kczulko.chapter9
 
+import com.github.kczulko.chapter9.Parsers._
+import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
-import Parsers._
-import org.scalacheck.Gen
 
 import scala.language.postfixOps
-import scala.util.matching.Regex
 
-class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
+class ParsersTest extends FlatSpec with Matchers with PropertyChecks{
 
   "parser" should "hold basic law for char parser" in {
     Parsers.run(char('c'))('c'.toString) shouldEqual Right('c')
@@ -51,8 +50,10 @@ class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   "many" should "produce array of proper length" in {
+    val endOfString: Parser[String] = """$""".r
+
     Parsers.run("a" many)("aaaaa") shouldEqual Right(List.fill(5)("a"))
-    Parsers.run("a" many)("aaaaab").isLeft shouldEqual true
+    Parsers.run(("a" many) ** endOfString)("aaaaab").isLeft shouldEqual true
     Parsers.run("a" many)("") shouldEqual Right(List.empty)
   }
 
@@ -84,5 +85,12 @@ class ParsersTest extends FlatSpec with Matchers with PropertyChecks {
 
     ("-" ** word ** "-")(ParseState(Location("""-dz-"""))) shouldEqual Success((("-", "dz"), "-"), 4)
     Parsers.run("{" ** quote ** word ** quote ** "}")("""{"dz"}""") shouldEqual Right( (((("{", "\""), "dz"),"\""),"}") )
+    Parsers.run("{" ** quote ** word ** quote ** "}")("""{"-dz"}""").isLeft shouldEqual true
+  }
+
+  "manyWithSeparator" should "recognize tokens with separator" in {
+    val a: Parser[String] = "a"
+
+    Parsers.run(manyWithSeparator(a, ","))("a,a,a") shouldEqual Right(List.fill(3)("a"))
   }
 }

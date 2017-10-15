@@ -1,7 +1,6 @@
 package com.github.kczulko.chapter11
 
 import com.github.kczulko.chapter11.Monads.{eitherMonad, idMonad, optionMonad}
-import com.kczulko.chapter4.MyEither
 import org.scalatest.{FlatSpec, Matchers}
 
 class MonadsTest extends FlatSpec with Matchers with MonadLaws {
@@ -12,10 +11,8 @@ class MonadsTest extends FlatSpec with Matchers with MonadLaws {
   }
 
   "Option monad" should behave like monadOf(optionMonad, Some(2)){
-    (_: Int) => None
+    _ => None
   }{
-    (_: Int) => Some("some")
+    _ => Some("some")
   }
-
-  MyEither
 }

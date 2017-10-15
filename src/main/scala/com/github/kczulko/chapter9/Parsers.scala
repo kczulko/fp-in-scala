@@ -95,15 +95,24 @@ object Parsers {
 
     go("", state)
   }
-  def many[A](p: Parser[A]): Parser[List[A]] = state => {
+
+  def many[A](p: => Parser[A]): Parser[List[A]] = state => {
     @tailrec
     def go(res: List[A], s: ParseState): Result[List[A]] = p(s) match {
       case Success(a, cc) => go(a :: res, s.copy(loc = s.loc.advanceBy(cc)))
-      case Failure(_,true) => Success(res, s.loc.offset)
-      case f @ Failure(_,_) => f
+      case _ => Success(res, s.loc.offset - state.loc.offset)
     }
 
     go(Nil, state)
+  }
+
+  def manyWithSeparator[A](p: => Parser[A], separator: String): Parser[List[A]] = {
+    many(
+      or(
+        p,
+        map(product(separator, p))(_._2),
+      )
+    )
   }
 
   def product[A,B](a: Parser[A], b: => Parser[B]): Parser[(A,B)] = flatMap(a) {
@@ -129,9 +138,17 @@ object Parsers {
   implicit def string(s: String): Parser[String] = stringP(s)
 
   implicit def regex(r: Regex): Parser[String] = state =>
-    r.findFirstMatchIn(state.input)
-      .map(m => Success(state.input.substring(m.start, m.end), m.end))
-      .getOrElse(Failure(state.loc.toError(s"Cannot find $r within ${state.input}"), isCommitted = true))
+    r.findFirstMatchIn(state.input) match {
+      case Some(m) if m.start == 0 => Success(state.input.substring(m.start, m.end), m.end)
+      case Some(m) => Failure(
+        state.loc.toError(
+          s"Unexpected characters not matching regex of ${r.pattern.pattern()} " +
+            s"for input '${state.input}' between location: (0, ${m.start})}"
+        ),
+        isCommitted = false
+      )
+      case _ => Failure(state.loc.toError(s"Cannot find $r within ${state.input}"), isCommitted = false)
+    }
 
   def char(c: Char): Parser[Char] = string(c.toString).map(_.charAt(0))
   def succeed[A](a: A): Parser[A] = stringP("").map(_ => a)
@@ -142,14 +159,18 @@ object Parsers {
     case i if i <= 0 => succeed(List[A]())
     case _ => map2(p, listOfN(n - 1, p))(_ :: _)
   }
+
   def manyInTermsOfOrMap2andSucceed[A](p: Parser[A]): Parser[List[A]] =
     or(
       map2(p, manyInTermsOfOrMap2andSucceed(p))(_ :: _),
       succeed(List[A]())
     )
+
   def product2[A,B](a: Parser[A], b: => Parser[B]): Parser[(A,B)] = map2(a, b)((_,_))
+
   def map2_2[A,B,C](a: Parser[A], b: Parser[B])(f: (A,B) => C): Parser[C] =
     flatMap(a)(aa => flatMap(b)(bb => succeed(f(aa,bb))))
+
   def map_2[A,B](p: Parser[A])(f: A => B): Parser[B] =
     flatMap(p)(a => succeed(f(a)))
 
