@@ -1,6 +1,5 @@
-package com.kczulko.chapter4
+package com.github.kczulko.chapter4
 
-import com.github.kczulko.chapter4.{MyLeft, MyRight}
 import com.github.kczulko.chapter4.MyEither._
 import org.scalatest.{FlatSpec, Matchers}
 
